@@ -5,7 +5,7 @@ import json
 import warnings
 
 #ignore warnings
-warnings.filterwarnings("ignore")
+##warnings.filterwarnings("ignore")
 
 #load data
 df = pd.read_csv("raw_data.csv", low_memory=False)
@@ -25,13 +25,22 @@ df.vote_count = pd.to_numeric(df.vote_count, errors='coerce')
 #replace single quotes to double quotes to make a valid json
 df.production_countries = df.production_countries.str.replace('\'', '\"')
 
+#remove rows where numeric type columns is 0
+df = df[df.budget != 0]
+df = df[df.revenue != 0]
+df = df[df.popularity != 0]
+df = df[df.runtime != 0]
+df = df[df.vote_count != 0]
+
+df = df.reset_index(drop=True)
+
 ##convert production_countries json entries to dict
 for i in range(0, len(df)):
     try:
-        df.production_countries[i] = json.loads(df.production_countries[i])
-        df.production_countries[i] = df.production_countries[i][0]['iso_3166_1']
+        loaded_json = json.loads(df.production_countries[i])
+        df.at[i, 'production_countries'] = loaded_json[0]['iso_3166_1']
     except Exception as e:
-        df.production_countries[i] = np.NaN
+        df.at[i, 'production_countries'] = np.NaN
 
 # Set string columns as dummies variables
 original_languages_dummies = pd.get_dummies(data=df['original_language'], prefix='lan', drop_first=True)
